@@ -1,11 +1,11 @@
 # coding: utf-8
 
 import sys
-import json
 import traceback
 import logging
 
 import pika
+import bson
 
 logger = logging.getLogger(__name__)
 
@@ -26,8 +26,8 @@ class MessageQueue(object):
 
     def consume(self, callback):
         def _callback(ch, method, properties, body):
-            # とりあえずメッセージボディはJSONにする
-            obj = json.loads(body)
+            # とりあえずメッセージボディはbsonにする
+            obj = bson.loads(body)
 
             # callbackでAttributeErrorが発生したときに
             # 終了しないため、特別にハンドルする
@@ -45,7 +45,7 @@ class MessageQueue(object):
         self.channel.start_consuming()
 
     def publish(self, obj):
-        body = json.dumps(obj)
+        body = bson.dumps(obj)
 
         self.channel.basic_publish(exchange='',
                 routing_key=self.queue,
