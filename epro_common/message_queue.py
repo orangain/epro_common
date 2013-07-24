@@ -27,7 +27,7 @@ class MessageQueue(object):
 
     def consume(self, callback):
         def _callback(ch, method, properties, body):
-            # とりあえずメッセージボディはbsonにする
+            # とりあえずメッセージボディはjsonにする
             obj = decode(body)
 
             # callbackでAttributeErrorが発生したときに
