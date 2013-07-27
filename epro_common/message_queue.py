@@ -18,9 +18,17 @@ class MessageQueue(object):
     def __init__(self, host, queue, durable=True):
         self.queue = queue
 
-        logger.info('Connecting to host: %s, queue: %s' % (host, queue))
+        if ':' in host:
+            host, port = host.split(':', 1)
+            port = int(port)
+        else:
+            port = None
+
+        logger.info('Connecting to host: %s, port: %s, queue: %s' %
+                (host, port, queue))
+
         connection = pika.BlockingConnection(pika.ConnectionParameters(
-                host=host))
+                host=host, port=port))
         self.channel = connection.channel()
 
         self.channel.queue_declare(queue=self.queue, durable=durable)
