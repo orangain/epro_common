@@ -24,15 +24,18 @@ class MessageQueue(object):
         else:
             port = None
 
-        logger.info('Connecting to host: %s, port: %s, queue: %s' %
-                (host, port, queue))
-
         self.connection_parameters = pika.ConnectionParameters(
                 host=host, port=port)
         self.durable = durable
         self._connect()
 
     def _connect(self):
+        logger.info('Connecting to host: %s, port: %s, queue: %s' % (
+            self.connection_parameters.host,
+            self.connection_parameters.port,
+            self.queue,
+            ))
+
         self.connection = pika.BlockingConnection(self.connection_parameters)
         self.channel = self.connection.channel()
         self.channel.queue_declare(queue=self.queue, durable=self.durable)
@@ -61,6 +64,7 @@ class MessageQueue(object):
         body = encode(obj)
 
         if not self.connection.is_open:
+            logger.info('Detected dead connection')
             self._connect()
 
         self.channel.basic_publish(exchange='',
