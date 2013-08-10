@@ -27,11 +27,15 @@ class MessageQueue(object):
         logger.info('Connecting to host: %s, port: %s, queue: %s' %
                 (host, port, queue))
 
-        connection = pika.BlockingConnection(pika.ConnectionParameters(
-                host=host, port=port))
-        self.channel = connection.channel()
+        self.connection_parameters = pika.ConnectionParameters(
+                host=host, port=port)
+        self.durable = durable
+        self._connect()
 
-        self.channel.queue_declare(queue=self.queue, durable=durable)
+    def _connect(self):
+        self.connection = pika.BlockingConnection(self.connection_parameters)
+        self.channel = self.connection.channel()
+        self.channel.queue_declare(queue=self.queue, durable=self.durable)
 
     def consume(self, callback):
         def _callback(ch, method, properties, body):
@@ -55,6 +59,9 @@ class MessageQueue(object):
 
     def publish(self, obj):
         body = encode(obj)
+
+        if not self.connection.is_open:
+            self._connect()
 
         self.channel.basic_publish(exchange='',
                 routing_key=self.queue,
