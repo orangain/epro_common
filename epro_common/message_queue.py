@@ -63,6 +63,15 @@ class MessageQueue(object):
     def publish(self, obj):
         body = encode(obj)
 
+        logger.debug('-- publish --')
+        logger.debug('connection.is_open: %s' % self.connection.is_open)
+        logger.debug('channel.is_open: %s' % self.channel.is_open)
+
+        self.connection.process_data_events()
+
+        logger.debug('connection.is_open: %s' % self.connection.is_open)
+        logger.debug('channel.is_open: %s' % self.channel.is_open)
+
         if not self.connection.is_open:
             logger.info('Detected dead connection')
             self._connect()
@@ -70,6 +79,8 @@ class MessageQueue(object):
         self.channel.basic_publish(exchange='',
                 routing_key=self.queue,
                 body=body)
+
+        logger.debug('-------------')
 
 def encode(obj):
     """
