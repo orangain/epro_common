@@ -63,24 +63,17 @@ class MessageQueue(object):
     def publish(self, obj):
         body = encode(obj)
 
-        logger.debug('-- publish --')
-        logger.debug('connection.is_open: %s' % self.connection.is_open)
-        logger.debug('channel.is_open: %s' % self.channel.is_open)
-
-        self.connection.process_data_events()
-
-        logger.debug('connection.is_open: %s' % self.connection.is_open)
-        logger.debug('channel.is_open: %s' % self.channel.is_open)
-
-        if not self.connection.is_open:
-            logger.info('Detected dead connection')
+        try:
+            self.channel.basic_publish(exchange='',
+                    routing_key=self.queue,
+                    body=body)
+        except Exception as ex:
+            logger.warning('Exception occured: %s' % ex)
+            logger.info('Try reconnecting')
             self._connect()
-
-        self.channel.basic_publish(exchange='',
-                routing_key=self.queue,
-                body=body)
-
-        logger.debug('-------------')
+            self.channel.basic_publish(exchange='',
+                    routing_key=self.queue,
+                    body=body)
 
 def encode(obj):
     """
